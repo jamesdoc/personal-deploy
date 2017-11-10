@@ -1,0 +1,9 @@
+- name: "Install additional software"
+  apt: pkg={{ item }} state=installed
+  with_items:
+  - unattended-upgrades
+
+- name: Adjust APT update intervals
+  copy:
+    src: ../files/apt_periodic
+    dest: /etc/apt/apt.conf.d/10periodic

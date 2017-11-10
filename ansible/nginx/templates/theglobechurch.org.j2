@@ -1,0 +1,17 @@
+server {
+  listen 80;
+  listen [::]:80;
+
+  root /srv/theglobechurch.org;
+  index index.html index.htm index.nginx-debian.html;
+
+  server_name theglobechurch.org www.theglobechurch.org;
+
+  location ~ /.well-known {
+    allow all;
+  }
+  
+  location / {
+    return 302 http://globe.church;
+  }
+}

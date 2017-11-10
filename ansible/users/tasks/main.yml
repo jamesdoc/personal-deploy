@@ -1,0 +1,37 @@
+---
+- name: "Create web group"
+  group:
+    name: webdeploy
+    state: present
+
+- name: "'webdeploy' group to have passwordless sudo"
+  become: true
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%webdeploy'
+    line: '%webdeploy ALL=(ALL) NOPASSWD: ALL'
+    validate: visudo -cf %s
+
+- name: "Create user"
+  user:
+    name: "{{ item }}"
+    createhome: no
+    state: present
+  with_items:
+  - "{{ users }}"
+
+- name: "Put users in group"
+  user:
+    name: "{{ item }}"
+    groups: webdeploy, sudo
+  with_items: 
+  - "{{ users }}"
+
+- name: "Set authorized keys"
+  authorized_key:
+    user: "{{ item }}"
+    state: present
+    key: https://github.com/jamesdoc.keys
+  with_items: 
+   - "{{ users }}"

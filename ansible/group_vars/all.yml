@@ -1,0 +1,17 @@
+# Server setup
+locale: en_GB.UTF-8
+timezone: Europe/London
+
+users: [jamesdoc]
+
+common_ssh_port: 22
+
+nginx_cache: /tmp/nginx_cache
+
+web_directory: /srv
+
+https: [
+  { email: 'hi@jamesdoc.com', domain: 'jamesdoc.uk'},
+  { email: 'james@globe.church', domain: 'theglobechurch.org'}
+]
+

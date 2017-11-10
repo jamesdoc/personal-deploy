@@ -1,0 +1,55 @@
+---
+- name: Apt via https
+  apt: name=apt-transport-https state=present
+
+- name: "Install web server software"
+  apt: pkg={{ item }} state=installed
+  become: true
+  with_items:
+  - nginx
+
+- name: "Remove default setup"
+  become: true
+  file:
+    state: absent
+    path: "/etc/nginx/sites-available/default"
+
+- name: Generate dhparams file
+  become: true
+  shell: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+
+- template:
+    src: ../templates/{{ item }}.j2
+    dest: /etc/nginx/sites-available/{{ item }}.conf
+  become: true
+  with_items:
+  - jamesdoc.uk
+  - jamesdoc.uk.https
+  - theglobechurch.org
+  - theglobechurch.org.https
+  - ip
+
+# - name: Set hash bucket size
+#   lineinfile: dest=/etc/nginx/nginx.conf
+#               regexp="^server_names_hash_bucket_size"
+#               line="server_names_hash_bucket_size 64;"
+#               state=present
+#   backup: true
+#   become: true
+#   notify:
+#   - Restart nginx
+
+- name: "Enable config"
+  file:
+    src: /etc/nginx/sites-available/{{ item }}.conf
+    dest: /etc/nginx/sites-enabled/{{ item }}.conf
+    state: link
+  become: true
+  with_items:
+  - jamesdoc.uk
+  - jamesdoc.uk.https
+  - theglobechurch.org
+  - theglobechurch.org.https
+  - ip
+  notify:
+  - Restart nginx

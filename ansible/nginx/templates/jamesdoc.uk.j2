@@ -1,0 +1,13 @@
+server {
+  listen 80;
+  listen [::]:80;
+
+  root /srv/jamesdoc.uk;
+  index index.html index.htm index.nginx-debian.html;
+
+  server_name jamesdoc.uk www.jamesdoc.uk;
+
+  location / {
+    try_files $uri $uri/ =404;
+  }
+}

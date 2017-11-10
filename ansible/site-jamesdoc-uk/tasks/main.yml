@@ -1,0 +1,28 @@
+- name: "Register deploy location"
+  set_fact:
+    deploy_location: "{{ web_directory }}/jamesdoc.uk"
+
+- name: Create root
+  file:
+    path: "/srv"
+    state: directory
+    owner: jamesdoc
+    group: webdeploy
+    mode: 0775
+  become: true
+
+- name: Creates directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: jamesdoc
+    group: webdeploy
+    mode: 0775
+    recurse: yes
+  with_items:
+   - "{{ deploy_location }}"
+
+- name: "Copy placeholder file"
+  copy:
+    src: ../files/index.htm
+    dest: "{{ deploy_location }}"
