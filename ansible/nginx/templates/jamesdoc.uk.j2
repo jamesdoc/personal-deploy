@@ -3,11 +3,14 @@ server {
   listen [::]:80;
 
   root /srv/jamesdoc.uk;
-  index index.html index.htm index.nginx-debian.html;
 
   server_name jamesdoc.uk www.jamesdoc.uk;
 
+  location ~ /.well-known {
+    allow all;
+  }
+  
   location / {
-    try_files $uri $uri/ =404;
+    return 302 https://jamesdoc.uk
   }
 }

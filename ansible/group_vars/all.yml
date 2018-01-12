@@ -8,10 +8,16 @@ common_ssh_port: 22
 
 nginx_cache: /tmp/nginx_cache
 
+releases_to_keep: 5
+
 web_directory: /srv
 
 https: [
   { email: 'hi@jamesdoc.com', domain: 'jamesdoc.uk'},
-  { email: 'james@globe.church', domain: 'theglobechurch.org'}
+  { email: 'hi@jamesdoc.com', domain: 'www.jamesdoc.uk'},
+  { email: 'james@globe.church', domain: 'theglobechurch.org'},
+  { email: 'james@globe.church', domain: 'www.theglobechurch.org'},
+  { email: 'james@globe.church', domain: 'storylondon2018.co.uk'},
+  { email: 'james@globe.church', domain: 'www.storylondon2018.co.uk'}
 ]
 
