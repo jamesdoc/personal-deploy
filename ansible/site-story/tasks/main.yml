@@ -73,6 +73,7 @@
 
 # Reload nginx
 - name: "Reload nginx"
+  become: true
   service:
     name: nginx
     state: reloaded
