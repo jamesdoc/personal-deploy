@@ -1,6 +1,6 @@
 - name: "Register deploy location"
   set_fact:
-    deploy_location: "{{ web_directory }}/storylondon2018.co.uk"
+    deploy_location: "{{ web_directory }}/kingdomcode.uk"
 
 - name: "Set deploy time"
   set_fact:
@@ -8,10 +8,10 @@
 
 - name: "Register deploy location"
   set_fact:
-    story_deploy: "{{ deploy_location }}/deploy/{{ timestamp }}"
+    kingdomcode_deploy: "{{ deploy_location }}/deploy/{{ timestamp }}"
 
-- name: "Ensure SSH cert is upto date"
-  shell: "/opt/certbot/certbot-auto renew"
+# - name: "Ensure SSH cert is upto date"
+#   shell: "/opt/certbot/certbot-auto renew"
 
 - name: Creates directories
   file:
@@ -22,14 +22,14 @@
     mode: 0775
     recurse: yes
   with_items:
-    - "{{ story_deploy }}"
+    - "{{ kingdomcode_deploy }}"
 
 # Download the files
-- name: "Clone story repo"
+- name: "Clone KC repo"
   become: false
   git:
-    repo: 'https://github.com/jamesdoc/story2018.git'
-    dest: "{{ story_deploy }}"
+    repo: 'https://github.com/kingdom-code/kingdom-code'
+    dest: "{{ kingdomcode_deploy }}"
     force: yes
 
 # NPM setup and build
@@ -37,17 +37,23 @@
   become: false
   shell: npm install
   args:
-    chdir: "{{ story_deploy }}"
+    chdir: "{{ kingdomcode_deploy }}"
 
-- name: "Build story package"
+- name: "Build [1/2]"
   become: false
-  shell: npm run build
+  shell: npx webpack -p --config webpack.prod.js
   args:
-    chdir: "{{ story_deploy }}"
+    chdir: "{{ kingdomcode_deploy }}"
+
+- name: "Build [2/2]"
+  become: false
+  shell: npx eleventy
+  args:
+    chdir: "{{ kingdomcode_deploy }}"
 
 # Nginx config
 - name: "Install web server software"
-  apt: pkg={{ item }} state=installed
+  apt: pkg={{ item }} state=present
   with_items:
   - nginx
 
@@ -56,7 +62,7 @@
     dest: /etc/nginx/sites-available/{{ item }}.conf
   become: true
   with_items:
-  - storylondon2018.co.uk
+  - kingdomcode.uk
 
 - name: "Enable config"
   file:
@@ -65,11 +71,11 @@
     state: link
   become: true
   with_items:
-  - storylondon2018.co.uk
+  - kingdomcode.uk
 
 # Push it live
 - name: "Create symlink to live"
-  shell: "ln -s -n -f {{ story_deploy }}/dist {{ deploy_location }}/live"
+  shell: "ln -s -n -f {{ kingdomcode_deploy }}/dist {{ deploy_location }}/live"
 
 # Reload nginx
 - name: "Reload nginx"
@@ -80,7 +86,7 @@
 
 # Tidy up
 - name: "List old releases"
-  shell: "ls -t {{story_deploy}}/deploy | tail -n +{{releases_to_keep + 1}}"
+  shell: "ls -t {{deploy_location}}/deploy | tail -n +{{releases_to_keep + 1}}"
   register: ls_output
 
 - debug:
@@ -88,7 +94,7 @@
 
 - name: "Remove old releases"
   file:
-    name: "{{story_deploy}}/deploy/{{ item }}"
+    name: "{{deploy_location}}/deploy/{{ item }}"
     state: absent
   become: true
   with_items: "{{ ls_output.stdout_lines }}"

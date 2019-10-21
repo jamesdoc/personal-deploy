@@ -1,5 +1,3 @@
-
----
 - name: Update apt cache
   apt:
     update_cache: yes
@@ -34,7 +32,11 @@
     force: yes
   become: true
 
-# Auto-renew certificates and reload nginx
+- name: Generate dhparams file
+  become: true
+  shell: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+
+# Auto-renew certificates
 - name: Add crontab to renew certificates
   cron:
     minute: "30"
@@ -43,7 +45,7 @@
     job: "/opt/certbot/certbot-auto renew >> /var/log/le-renew.log"
 
 - name: Add crontab to reload server
-  cron: 
+  cron:
     minute: "35"
     hour: "2"
     weekday: "1"
@@ -56,24 +58,23 @@
   with_items: "{{ https }}"
   register: server_keys
 
-- debug:
-    msg: "{{ server_keys.results }}"
+# - debug:
+#     msg: "{{ server_keys.results }}"
 
-- debug:
-    msg: "{{ server_keys.results[1].item.domain }}: {{ server_keys.results[1].stat.exists }}"
+#- debug:
+#    msg: "{{ server_keys.results[1].item.domain }}: {{ server_keys.results[1].stat.exists }}"
 
 - debug:
     msg: "{{ item }}"
   with_items: "{{ server_keys.results }}"
 
 - name: Create certificate
-  shell: ./certbot-auto certonly --email {{ item.item.email }} --standalone --agree-tos -d {{ item.item.domain }};
+  shell: ./certbot-auto certonly --email {{ item.item.email }} --standalone --agree-tos --non-interactive -d {{ item.item.domain }} -w {{ item.item.webroot }};
   args:
     chdir: /opt/certbot
   with_items: "{{ server_keys.results }}"
   when:
     - item.stat.exists == false
-
 
 - name: reload nginx
   service:

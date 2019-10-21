@@ -1,0 +1,17 @@
+---
+- name: Setup
+  hosts: all
+  become: false
+  gather_facts: False
+  pre_tasks:
+    - name: "Python for Ansible"
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    - name: "apt-get update"
+      raw: sudo apt-get update -qq
+    - name: "apt-get upgrade"
+      raw: sudo apt-get upgrade -qq
+    - setup: # aka gather_facts
+  roles:
+    - updates
+    - site-hopevauxhall.co.uk
+    #- letsencrypt

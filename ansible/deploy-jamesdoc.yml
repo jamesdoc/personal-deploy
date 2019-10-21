@@ -12,6 +12,6 @@
       raw: sudo apt-get upgrade -qq
     - setup: # aka gather_facts
   roles:
-    - updates
-    - site-story
-    - letsencrypt
+    # - updates
+    - site-jamesdoc.com
+    # - letsencrypt
