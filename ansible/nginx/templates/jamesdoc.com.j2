@@ -46,6 +46,7 @@ server {
   ssl_stapling_verify on;
 
   rewrite ^/premdac-feedback$ https://docs.google.com/forms/d/e/1FAIpQLSfpD33KHhRs2X1Nil180B0fw2Zg7MhC4J36Z6V1EEdSg8XkGQ/viewform redirect;
+  rewrite ^/rss /blog/feed.xml permanent;
   
   location / {
     try_files $uri $uri/ =404;
