@@ -1,0 +1,94 @@
+- name: "Register deploy location"
+  set_fact:
+    deploy_location: "{{ web_directory }}/secondofmay.co.uk"
+
+- name: "Set deploy time"
+  set_fact:
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%SZ') }}"
+
+- name: "Register deploy location"
+  set_fact:
+    current_deploy: "{{ deploy_location }}/deploy/{{ timestamp }}"
+
+# - name: "Ensure SSH cert is upto date"
+#   shell: "/opt/certbot/certbot-auto renew"
+
+- name: Creates directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: jamesdoc
+    group: webdeploy
+    mode: 0775
+    recurse: yes
+  with_items:
+    - "{{ current_deploy }}"
+
+# Download the files
+- name: "Clone repo"
+  become: false
+  git:
+    repo: 'https://github.com/jamesdoc/second-of-may'
+    dest: "{{ current_deploy }}"
+    force: yes
+
+# NPM setup and build
+- name: "NPM install"
+  become: false
+  shell: npm install
+  args:
+    chdir: "{{ current_deploy }}"
+
+- name: "Build"
+  become: false
+  shell: npm run build
+  args:
+    chdir: "{{ current_deploy }}"
+
+# Nginx config
+- name: "Install web server software"
+  apt: pkg={{ item }} state=present
+  with_items:
+  - nginx
+
+- template:
+    src: ../../nginx/templates/{{ item }}.j2
+    dest: /etc/nginx/sites-available/{{ item }}.conf
+  become: true
+  with_items:
+  - secondofmay.co.uk
+
+- name: "Enable config"
+  file:
+    src: /etc/nginx/sites-available/{{ item }}.conf
+    dest: /etc/nginx/sites-enabled/{{ item }}.conf
+    state: link
+  become: true
+  with_items:
+  - secondofmay.co.uk
+
+# Push it live
+- name: "Create symlink to live"
+  shell: "ln -s -n -f {{ current_deploy }}/dist {{ deploy_location }}/live"
+
+# Reload nginx
+- name: "Reload nginx"
+  become: true
+  service:
+    name: nginx
+    state: reloaded
+
+# Tidy up
+- name: "List old releases"
+  shell: "ls -t {{deploy_location}}/deploy | tail -n +{{releases_to_keep + 1}}"
+  register: ls_output
+
+- debug:
+    var: ls_output.stdout_lines
+
+- name: "Remove old releases"
+  file:
+    name: "{{deploy_location}}/deploy/{{ item }}"
+    state: absent
+  become: true
+  with_items: "{{ ls_output.stdout_lines }}"
