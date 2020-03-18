@@ -1,0 +1,30 @@
+server {
+  listen       80;
+  server_name  www.churcheshandbook.co.uk;
+  return       301 http://churcheshandbook.co.uk$request_uri; 
+}
+
+server {
+  listen            80;
+  server_name       churcheshandbook.co.uk;
+  root              /srv/churcheshandbook.co.uk/live;
+  index index.html index.htm index.nginx-debian.html;
+  disable_symlinks  off;
+  charset           utf-8;
+
+  
+  location / {
+    try_files $uri $uri/ =404;
+  }
+
+  # location /test/ {
+  #  proxy_pass https://kingdomcode.org.uk/blog/ ;
+  # }
+
+  location /covid/ {
+    proxy_ssl_server_name on;
+    proxy_ssl_protocols TLSv1.2;
+    proxy_pass https://churches-and-covid.gdes.app/home/ ;
+  }
+
+}
